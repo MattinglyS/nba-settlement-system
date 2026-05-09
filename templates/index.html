@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Settlement System</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --surface: #0f172a;
+            --surface2: #1e293b;
+            --border: #1e293b;
+            --border2: #334155;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --text-dim: #475569;
+            --green: #22c55e;
+            --green-bg: rgba(34, 197, 94, 0.08);
+            --red: #ef4444;
+            --red-bg: rgba(239, 68, 68, 0.08);
+            --amber: #f59e0b;
+            --amber-bg: rgba(245, 158, 11, 0.08);
+            --blue: #38bdf8;
+            --blue-bg: rgba(56, 189, 248, 0.08);
+            --mono: 'IBM Plex Mono', monospace;
+            --sans: 'IBM Plex Sans', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(56, 189, 248, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(180deg, #0f172a 0%, rgba(15,23,42,0.95) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-mark {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--blue), #6366f1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .header-title h1 {
+            font-family: var(--mono);
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .header-title p {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .stat-group { text-align: right; }
+
+        .stat-value {
+            font-family: var(--mono);
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--blue);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 40px;
+        }
+
+        .section { margin-bottom: 40px; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-label {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+        }
+
+        .section-count {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-dim);
+            background: var(--surface2);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .settlement-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .settlement-table thead tr {
+            border-bottom: 1px solid var(--border2);
+        }
+
+        .settlement-table th {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            text-align: left;
+        }
+
+        .settlement-table th:last-child,
+        .settlement-table th:nth-last-child(2) {
+            text-align: center;
+        }
+
+        .settlement-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        .settlement-table tbody tr:hover {
+            background: var(--surface);
+        }
+
+        .settlement-table td { padding: 14px 16px; font-size: 13px; }
+
+        .date-cell {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .matchup-cell { font-weight: 500; color: var(--text); }
+        .matchup-cell .away { color: var(--text-muted); }
+
+        .score-cell {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .line-cell {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .result-cell { text-align: center; }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 4px;
+            min-width: 100px;
+            white-space: nowrap;
+        }
+
+        .result-badge.green {
+            color: var(--green);
+            background: var(--green-bg);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .result-badge.red {
+            color: var(--red);
+            background: var(--red-bg);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .result-badge.amber {
+            color: var(--amber);
+            background: var(--amber-bg);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .result-badge.muted {
+            color: var(--text-dim);
+            background: var(--surface);
+            border: 1px solid var(--border2);
+        }
+
+        .upcoming-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .game-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: border-color 0.2s, transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--blue), transparent);
+        }
+
+        .game-card:hover {
+            border-color: var(--border2);
+            transform: translateY(-2px);
+        }
+
+        .card-matchup { margin-bottom: 16px; }
+        .card-away { font-size: 13px; color: var(--text-muted); margin-bottom: 2px; }
+        .card-home { font-size: 15px; font-weight: 600; color: var(--text); }
+
+        .card-at {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 4px 0;
+        }
+
+        .card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .card-stat { display: flex; flex-direction: column; gap: 4px; }
+
+        .card-stat-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+        }
+
+        .card-stat-value {
+            font-family: var(--mono);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .card-stat-value.blue { color: var(--blue); }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-dim);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            gap: 12px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--blue);
+            border-radius: 50%;
+            animation: loading-bounce 1.2s infinite;
+        }
+
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes loading-bounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 24px;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+            margin-top: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .header { padding: 16px 20px; flex-wrap: wrap; gap: 16px; }
+            .content { padding: 24px 20px; }
+            .header-right { gap: 16px; }
+            .settlement-table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="logo-mark">NS</div>
+        <div class="header-title">
+            <h1>NBA Settlement System</h1>
+            <p id="last-updated"><span class="status-dot"></span>Loading...</p>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="stat-group">
+            <div class="stat-value" id="settled-count">—</div>
+            <div class="stat-label">Settled</div>
+        </div>
+        <div class="stat-group">
+            <div class="stat-value" id="upcoming-count">—</div>
+            <div class="stat-label">Upcoming</div>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <div id="app">
+        <div class="loading">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    NBA Settlement System — Mattingly Siegel — BALLDONTLIE API · Kalshi API
+</div>
+
+<script>
+    function getResultBadge(result) {
+        if (!result) return `<span class="result-badge muted">NO LINE</span>`;
+        const r = result.toUpperCase();
+        if (r === 'HOME COVERS' || r === 'OVER') return `<span class="result-badge green">${result}</span>`;
+        if (r === 'AWAY COVERS' || r === 'UNDER') return `<span class="result-badge red">${result}</span>`;
+        if (r === 'PUSH') return `<span class="result-badge amber">PUSH</span>`;
+        return `<span class="result-badge muted">${result}</span>`;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr + 'T12:00:00');
+        return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+
+    function formatSpread(spread) {
+        if (spread === null || spread === undefined) return '—';
+        return spread > 0 ? `+${spread}` : `${spread}`;
+    }
+
+    function renderSettled(games) {
+        if (!games || games.length === 0) {
+            return `<div class="empty-state">No settled games in the last 3 days.<br>Check back after games complete.</div>`;
+        }
+
+        const grouped = {};
+        games.forEach(g => {
+            if (!grouped[g.game_date]) grouped[g.game_date] = [];
+            grouped[g.game_date].push(g);
+        });
+
+        let html = `
+        <table class="settlement-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Matchup</th>
+                    <th>Final Score</th>
+                    <th>Spread (Home)</th>
+                    <th>Spread Result</th>
+                    <th>Total</th>
+                    <th>Total Result</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        Object.keys(grouped).sort().reverse().forEach(date => {
+            grouped[date].forEach(g => {
+                const score = (g.home_final_score !== null && g.away_final_score !== null)
+                    ? `${g.away_final_score} — ${g.home_final_score}`
+                    : '—';
+
+                const combined = (g.home_final_score !== null && g.away_final_score !== null)
+                    ? `(${g.home_final_score + g.away_final_score})`
+                    : '';
+
+                html += `
+                <tr>
+                    <td class="date-cell">${formatDate(g.game_date)}</td>
+                    <td class="matchup-cell">
+                        <span class="away">${g.away_team}</span>
+                        <span style="color:var(--text-dim);margin:0 6px">@</span>
+                        ${g.home_team}
+                    </td>
+                    <td class="score-cell">${score} <span style="color:var(--text-dim);font-size:11px">${combined}</span></td>
+                    <td class="line-cell">${formatSpread(g.closing_spread)}</td>
+                    <td class="result-cell">${getResultBadge(g.spread_result)}</td>
+                    <td class="line-cell">${g.closing_total !== null ? g.closing_total : '—'}</td>
+                    <td class="result-cell">${getResultBadge(g.total_result)}</td>
+                </tr>`;
+            });
+        });
+
+        html += '</tbody></table>';
+        return html;
+    }
+
+    function renderUpcoming(games) {
+        if (!games || games.length === 0) {
+            return `<div class="empty-state">No upcoming games scheduled for today.<br>Check back after 9AM ET when the schedule loads.</div>`;
+        }
+
+        let html = '<div class="upcoming-grid">';
+        games.forEach(g => {
+            html += `
+            <div class="game-card">
+                <div class="card-matchup">
+                    <div class="card-away">${g.away_team}</div>
+                    <div class="card-at">at</div>
+                    <div class="card-home">${g.home_team}</div>
+                </div>
+                <div class="card-stats">
+                    <div class="card-stat">
+                        <div class="card-stat-label">Tipoff</div>
+                        <div class="card-stat-value blue">${g.game_start_time || '—'}</div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="card-stat-label">Spread</div>
+                        <div class="card-stat-value">${g.closing_spread !== null ? formatSpread(g.closing_spread) : '—'}</div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="card-stat-label">Total</div>
+                        <div class="card-stat-value">${g.closing_total !== null ? g.closing_total : '—'}</div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        return html;
+    }
+
+    function render(data) {
+        const { settled, upcoming, last_updated } = data;
+
+        document.getElementById('last-updated').innerHTML =
+            `<span class="status-dot"></span>Updated ${last_updated}`;
+        document.getElementById('settled-count').textContent = settled.length;
+        document.getElementById('upcoming-count').textContent = upcoming.length;
+
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-label">Recent Settlements</span>
+                    <span class="section-count">${settled.length} games</span>
+                </div>
+                ${renderSettled(settled)}
+            </div>
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-label">Today's Upcoming Games</span>
+                    <span class="section-count">${upcoming.length} games</span>
+                </div>
+                ${renderUpcoming(upcoming)}
+            </div>
+        `;
+    }
+
+    async function fetchData() {
+        try {
+            const res = await fetch('/api/data');
+            const data = await res.json();
+            render(data);
+        } catch (err) {
+            document.getElementById('app').innerHTML =
+                `<div class="empty-state">Error loading data. Retrying in 60 seconds...</div>`;
+        }
+    }
+
+    fetchData();
+    setInterval(fetchData, 60000);
+</script>
+</body>
+</html>
